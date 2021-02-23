@@ -1,32 +1,33 @@
 import { useMutation } from "@apollo/client";
 import React, { useState } from "react";
+import Select from "react-select";
 import { EDIT_AUTHORS_BIRTHYEAR } from "../queries";
 
-const EditAuthorsBirthYear = () => {
-  const [editAuthorsBirthyear] = useMutation(EDIT_AUTHORS_BIRTHYEAR);
-
-  const [name, setName] = useState("");
+const EditAuthorsBirthYear = ({ options }) => {
   const [year, setYear] = useState("");
+  const [nameOption, setNameOption] = useState(null);
+
+  const [editAuthorsBirthyear] = useMutation(EDIT_AUTHORS_BIRTHYEAR, {
+    onError: (error) => console.error(error.graphQLErrors),
+  });
 
   const onSubmit = (event) => {
     event.preventDefault();
+    if (!nameOption) {
+      return; //escaping the error
+    }
+    editAuthorsBirthyear({
+      variables: { name: nameOption.value, year: Number(year) },
+    });
 
-    editAuthorsBirthyear({ variables: { name, year: Number(year) } });
-
-    setName("");
+    setNameOption(null);
     setYear("");
   };
   return (
     <div>
       <h2>Edit Author's Birthyear</h2>
       <form onSubmit={onSubmit}>
-        <div>
-          Name{" "}
-          <input
-            value={name}
-            onChange={({ target }) => setName(target.value)}
-          />
-        </div>
+        <Select value={nameOption} onChange={setNameOption} options={options} />
         <div>
           Year{" "}
           <input

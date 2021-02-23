@@ -20,6 +20,11 @@ const Authors = (props) => {
 
   const authors = result.data.allAuthors;
 
+  const optionsForEditAuthorsBirthYearForm = authors.map((author) => ({
+    value: author.name,
+    label: author.name,
+  }));
+
   return (
     <div>
       <h2>authors</h2>
@@ -39,7 +44,7 @@ const Authors = (props) => {
           ))}
         </tbody>
       </table>
-      <EditAuthorsBirthYear />
+      <EditAuthorsBirthYear options={optionsForEditAuthorsBirthYearForm} />
     </div>
   );
 };
