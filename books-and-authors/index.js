@@ -1,5 +1,24 @@
 const { ApolloServer, gql, UserInputError } = require("apollo-server");
-const { v1: uuid } = require("uuid");
+const mongoose = require("mongoose");
+const MONGODB_URI = require("./mongoCridentials");
+const Book = require("./models/book");
+const Author = require("./models/author");
+
+console.log("connecting to", MONGODB_URI);
+
+mongoose
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  })
+  .then(() => {
+    console.log("connected to MongoDB");
+  })
+  .catch((error) => {
+    console.log("error connection to MongoDB:", error.message);
+  });
 
 let authors = [
   {
@@ -89,7 +108,7 @@ const typeDefs = gql`
     id: ID!
     title: String!
     published: Int!
-    author: String!
+    author: Author!
     genres: [String!]
   }
 
