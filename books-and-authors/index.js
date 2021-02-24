@@ -20,7 +20,7 @@ mongoose
     console.log("error connection to MongoDB:", error.message);
   });
 
-let authors = [
+/*let authors = [
   {
     name: "Robert Martin",
     id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
@@ -44,14 +44,14 @@ let authors = [
     name: "Sandi Metz", // birthyear not known
     id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
   },
-];
+];*/
 
 /*
  * Saattaisi olla järkevämpää assosioida kirja ja sen tekijä tallettamalla kirjan yhteyteen tekijän nimen sijaan tekijän id
  * Yksinkertaisuuden vuoksi tallennamme kuitenkin kirjan yhteyteen tekijän nimen
  */
 
-let books = [
+/*let books = [
   {
     title: "Clean Code",
     published: 2008,
@@ -102,6 +102,7 @@ let books = [
     genres: ["classic", "revolution"],
   },
 ];
+*/
 
 const typeDefs = gql`
   type Book {
@@ -140,76 +141,89 @@ const typeDefs = gql`
 
 const resolvers = {
   Author: {
-    bookCount: (root) => {
-      const result = books.filter((book) => book.author === root.name);
-      return result.length;
+    bookCount: async (root) => {
+      let booksAmount = 0;
+      await Book.count({ author: root.id }, async (err, count) => {
+        booksAmount = count;
+      });
+      return booksAmount;
     },
   },
 
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root, args) => {
+    bookCount: () => {
+      return Book.collection.countDocuments();
+    },
+    authorCount: () => {
+      return Author.collection.countDocuments();
+    },
+    allBooks: async (root, args) => {
       //no genre, no author
       if (!args.author && !args.genre) {
+        const books = await Book.find({}).populate("author");
         return books;
       }
 
       //no genre, yes author
-      if (!args.genre && args.author) {
+      /*if (!args.genre && args.author) {
         return books.filter((book) => book.author === args.author);
-      }
+      }*/
 
       //yes genre, no author
       if (!args.author && args.genre) {
-        return books.filter((book) =>
-          book.genres.find((genre) => genre === args.genre)
-        );
+        const books = await Book.find({
+          genres: { $in: args.genre },
+        }).populate("author");
+        return books;
       }
 
       //yes genre, yes author
-      return books.filter(
+      /*return books.filter(
         (book) =>
           book.author === args.author &&
           book.genres.find((genre) => genre === args.genre)
-      );
+      );*/
     },
-    allAuthors: () => authors,
+    allAuthors: async () => {
+      const authors = await Author.find({});
+      return authors;
+    },
   },
 
   Mutation: {
-    addBook: (root, args) => {
+    addBook: async (root, args) => {
       if (!args.author || !args.title) {
         throw new UserInputError("author and title can't be empty");
       }
-      const newBook = { ...args, id: uuid() };
-      if (!authors.find((author) => author.name === args.author)) {
-        const newAuthor = {
-          name: args.author,
-          id: uuid(),
-          born: null,
-        };
-        authors = authors.concat(newAuthor);
-      }
-      books = books.concat(newBook);
+      let author = null;
+      await Author.exists({ name: args.author }).then(async (exists) => {
+        if (exists) {
+          author = await Author.findOne({ name: args.author });
+        } else {
+          author = new Author({
+            name: args.author,
+            born: null,
+          });
+          author = await author.save();
+        }
+      });
+      const newBook = new Book({
+        ...args,
+        author,
+      });
+      await newBook.save();
       return newBook;
     },
 
-    editAuthor: (root, args) => {
-      const authorToUpdate = authors.find(
-        (author) => author.name === args.name
-      );
+    editAuthor: async (root, args) => {
+      const authorToUpdate = Author.findOne({ name: args.name });
       if (!authorToUpdate) {
         return null;
       }
 
-      const editedAuthor = { ...authorToUpdate, born: args.setBornTo };
+      await Author.updateOne({ name: args.name }, { born: args.setBornTo });
 
-      authors = authors.map((author) =>
-        author.name !== editedAuthor.name ? author : editedAuthor
-      );
-
-      return editedAuthor;
+      return authorToUpdate;
     },
   },
 };
