@@ -195,24 +195,30 @@ const resolvers = {
       if (!args.author || !args.title) {
         throw new UserInputError("author and title can't be empty");
       }
-      let author = null;
-      await Author.exists({ name: args.author }).then(async (exists) => {
-        if (exists) {
-          author = await Author.findOne({ name: args.author });
-        } else {
-          author = new Author({
-            name: args.author,
-            born: null,
-          });
-          author = await author.save();
-        }
-      });
-      const newBook = new Book({
-        ...args,
-        author,
-      });
-      await newBook.save();
-      return newBook;
+      try {
+        let author = null;
+        await Author.exists({ name: args.author }).then(async (exists) => {
+          if (exists) {
+            author = await Author.findOne({ name: args.author });
+          } else {
+            author = new Author({
+              name: args.author,
+              born: null,
+            });
+            author = await author.save();
+          }
+        });
+        const newBook = new Book({
+          ...args,
+          author,
+        });
+        await newBook.save();
+        return newBook;
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
     },
 
     editAuthor: async (root, args) => {
@@ -220,8 +226,13 @@ const resolvers = {
       if (!authorToUpdate) {
         return null;
       }
-
-      await Author.updateOne({ name: args.name }, { born: args.setBornTo });
+      try {
+        await Author.updateOne({ name: args.name }, { born: args.setBornTo });
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
 
       return authorToUpdate;
     },
