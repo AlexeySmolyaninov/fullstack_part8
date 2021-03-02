@@ -4,7 +4,9 @@ import { GET_ALL_AUTHORS } from "../queries";
 import EditAuthorsBirthYear from "./EditAuthorsBirthYear";
 
 const Authors = (props) => {
-  const result = useQuery(GET_ALL_AUTHORS);
+  const result = useQuery(GET_ALL_AUTHORS, {
+    onError: (error) => console.log(error.graphQLErrors[0].message),
+  });
 
   if (!props.show) {
     return null;
