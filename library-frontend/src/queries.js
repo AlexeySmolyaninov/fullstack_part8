@@ -8,6 +8,15 @@ export const LOGIN = gql`
   }
 `;
 
+export const ME = gql`
+  query Me {
+    me {
+      id
+      favoriteGenre
+    }
+  }
+`;
+
 export const GET_ALL_AUTHORS = gql`
   query {
     allAuthors {

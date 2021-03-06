@@ -20,6 +20,7 @@ const Login = ({ setToken, setPage, show }) => {
       setUsername("");
       setPassword("");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.data]);
 
   if (!show) {

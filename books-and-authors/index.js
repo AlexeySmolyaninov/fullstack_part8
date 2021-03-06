@@ -29,7 +29,8 @@ mongoose
     console.log("error connection to MongoDB:", error.message);
   });
 
-/*let authors = [
+/* Keeping the hard coded data for future purposess (maybe testing)
+let authors = [
   {
     name: "Robert Martin",
     id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
@@ -165,11 +166,7 @@ const typeDefs = gql`
 const resolvers = {
   Author: {
     bookCount: async (root) => {
-      let booksAmount = 0;
-      await Book.count({ author: root.id }, async (err, count) => {
-        booksAmount = count;
-      });
-      return booksAmount;
+      return await Book.count({ author: root.id }).countDocuments();
     },
   },
 
@@ -180,8 +177,8 @@ const resolvers = {
       }
       return context.currentUser;
     },
-    bookCount: () => {
-      return Book.collection.countDocuments();
+    bookCount: async () => {
+      return await Book.collection.countDocuments();
     },
     authorCount: () => {
       return Author.collection.countDocuments();
