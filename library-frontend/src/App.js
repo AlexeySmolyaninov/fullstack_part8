@@ -1,10 +1,11 @@
-import { useApolloClient } from "@apollo/client";
+import { useApolloClient, useSubscription } from "@apollo/client";
 import React, { useState } from "react";
 import Authors from "./components/Authors";
 import Books from "./components/Books";
 import Login from "./components/Login";
 import NewBook from "./components/NewBook";
 import Recommendation from "./components/Recommendation";
+import { BOOK_ADDED } from "./queries";
 
 const App = () => {
   const [token, setToken] = useState(
@@ -12,6 +13,13 @@ const App = () => {
   );
   const [page, setPage] = useState("authors");
   const client = useApolloClient();
+
+  useSubscription(BOOK_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const addedBook = subscriptionData.data.bookAdded;
+      window.alert(`Book with title ${addedBook.title} has been added`);
+    },
+  });
 
   const onLogout = async () => {
     setToken(null);
