@@ -1,12 +1,15 @@
 import { useMutation } from "@apollo/client";
 import React, { useState } from "react";
-import { ADD_BOOK, GET_ALL_BOOKS, GET_ALL_AUTHORS } from "../queries";
+import { ADD_BOOK, GET_ALL_AUTHORS } from "../queries";
 
 const NewBook = (props) => {
   const [addBook] = useMutation(ADD_BOOK, {
-    refetchQueries: [{ query: GET_ALL_BOOKS }, { query: GET_ALL_AUTHORS }],
+    refetchQueries: [{ query: GET_ALL_AUTHORS }], //[{ query: GET_ALL_BOOKS }, { query: GET_ALL_AUTHORS }],
     onError: (error) => {
       console.error("Error", error.graphQLErrors);
+    },
+    update: (_, response) => {
+      props.updateCacheWith(response.data.addBook);
     },
   });
 

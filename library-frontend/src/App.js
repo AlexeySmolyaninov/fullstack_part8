@@ -5,7 +5,7 @@ import Books from "./components/Books";
 import Login from "./components/Login";
 import NewBook from "./components/NewBook";
 import Recommendation from "./components/Recommendation";
-import { BOOK_ADDED } from "./queries";
+import { BOOK_ADDED, GET_ALL_BOOKS } from "./queries";
 
 const App = () => {
   const [token, setToken] = useState(
@@ -14,10 +14,24 @@ const App = () => {
   const [page, setPage] = useState("authors");
   const client = useApolloClient();
 
+  const updateCacheWith = (addedBook) => {
+    const isBookInCache = (cache, book) =>
+      cache.map((book) => book.id).includes(book.id);
+
+    const dataInStore = client.readQuery({ query: GET_ALL_BOOKS });
+    if (!isBookInCache(dataInStore.allBooks, addedBook)) {
+      client.writeQuery({
+        query: GET_ALL_BOOKS,
+        data: { allBooks: dataInStore.allBooks.concat(addedBook) },
+      });
+    }
+  };
+
   useSubscription(BOOK_ADDED, {
     onSubscriptionData: ({ subscriptionData }) => {
       const addedBook = subscriptionData.data.bookAdded;
       window.alert(`Book with title ${addedBook.title} has been added`);
+      updateCacheWith(addedBook);
     },
   });
 
@@ -47,7 +61,7 @@ const App = () => {
 
       <Books show={page === "books"} />
 
-      <NewBook show={page === "add"} />
+      <NewBook show={page === "add"} updateCacheWith={updateCacheWith} />
 
       <Recommendation show={page === "recommendation"} />
 
